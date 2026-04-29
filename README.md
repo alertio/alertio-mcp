@@ -7,7 +7,7 @@ Real-time DeFi risk data for AI agents. Check lending positions, simulate liquid
 ```json
 {
   "alertio": {
-    "url": "https://alertio.io/api/mcp"
+    "url": "https://www.alertio.io/api/mcp"
   }
 }
 ```
