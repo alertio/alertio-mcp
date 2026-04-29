@@ -18,7 +18,7 @@ For stdio-only clients (older versions of Claude Desktop), use `mcp-remote`:
 {
   "alertio": {
     "command": "npx",
-    "args": ["-y", "mcp-remote", "https://alertio.io/api/mcp"]
+    "args": ["-y", "mcp-remote", "https://www.alertio.io/api/mcp"]
   }
 }
 ```
