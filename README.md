@@ -9,7 +9,7 @@ Real-time DeFi risk intelligence for AI agents. Scan lending positions across EV
 ```json
 {
   "alertio": {
-    "url": "https://alertio.io/api/mcp"
+    "url": "https://www.alertio.io/api/mcp"
   }
 }
 ```
@@ -20,7 +20,7 @@ Real-time DeFi risk intelligence for AI agents. Scan lending positions across EV
 {
   "alertio": {
     "command": "npx",
-    "args": ["-y", "mcp-remote", "https://alertio.io/api/mcp"]
+    "args": ["-y", "mcp-remote", "https://www.alertio.io/api/mcp"]
   }
 }
 ```
@@ -301,7 +301,7 @@ Pre-built prompt templates available as slash commands in supporting clients (Cl
 npx @modelcontextprotocol/inspector
 ```
 
-Open the URL it prints, set transport to **Streamable HTTP** with connection type **Proxy**, paste `https://alertio.io/api/mcp`, and click Connect.
+Open the URL it prints, set transport to **Streamable HTTP** with connection type **Proxy**, paste `https://www.alertio.io/api/mcp`, and click Connect.
 
 ---
 
