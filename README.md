@@ -2,7 +2,7 @@
 
 [![smithery badge](https://smithery.ai/badge/alertio/alertio-mcp)](https://smithery.ai/servers/alertio/alertio-mcp)
 
-Real-time DeFi risk intelligence for AI agents. Scan lending positions across EVM, Solana, and TON chains, simulate liquidations, monitor stablecoin pegs, inspect market utilization, and track perpetual funding rates — no API key required.
+Real-time DeFi risk intelligence for AI agents. Scan lending positions across EVM, Solana, and TON chains, simulate liquidations, calculate health factors for hypothetical positions, monitor stablecoin pegs, inspect market utilization, and track perpetual funding rates — no API key required.
 
 ## Connection
 
@@ -41,8 +41,8 @@ Scans an EVM wallet address across all supported lending protocols and returns e
 | Aave V4  | Ethereum (Core · Prime · Plus hubs) |
 | Spark    | Ethereum |
 | Morpho   | Ethereum · Base · Arbitrum |
-| Euler V2 | Ethereum |
-| Moonwell | Base |
+| Euler V2 | Ethereum · Monad |
+| Moonwell | Base · Optimism |
 
 **Parameters**
 
@@ -90,14 +90,13 @@ Total active positions: 3
 
 ### `scan_solana_wallet`
 
-Scans a Solana wallet address across Kamino and Marginfi lending protocols.
+Scans a Solana wallet address for Kamino lending positions.
 
 **Supported protocols**
 
 | Protocol | Chain |
 |----------|-------|
 | Kamino   | Solana |
-| Marginfi | Solana |
 
 **Parameters**
 
@@ -112,9 +111,6 @@ Solana lending positions for 7xKX...AbCD
 
 KAMINO
   Solana: HF 1.72 · $12K collateral · $6K debt [AT RISK]
-
-MARGINFI
-  No active borrow position.
 
 Total active positions: 1
 ```
@@ -179,6 +175,50 @@ Scenario: collateral drops 30%
 △ 2 position(s) at risk at -30%
 ⚠ 1 position(s) LIQUIDATED at -30%
 ```
+
+---
+
+### `calculate_health_factor`
+
+Calculates a health factor from position inputs — no wallet, no chain, no on-chain lookup. Takes one or more collateral legs, each with its own liquidation threshold, plus the debt, and returns the health factor, the blended threshold, the collateral drop that would trigger liquidation, and the collateral value at which liquidation begins. Optionally simulates a collateral price drop and a move in the borrowed asset's price.
+
+Unlike `simulate_liquidation`, this needs no existing position — use it for hypotheticals ("if I supplied 5 ETH and borrowed $6,500…"), for sizing a borrow before opening it, or for working through a position someone describes in conversation.
+
+It is also the only tool here that calls no upstream service, so it has no rate-limit exposure and cannot be affected by an outage.
+
+**Formula:** `HF = (Σ collateral value × liquidation threshold) ÷ debt`
+
+Per-asset thresholds are applied to each leg, then summed — matching how protocols compute a blended threshold across mixed collateral.
+
+**Parameters**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `collateral` | array | Yes | 1–20 legs, each `{ value_usd, liquidation_threshold_pct, symbol? }` |
+| `debt_usd` | number | Yes | Total borrowed value in USD. `0` means no debt, so no liquidation point |
+| `collateral_drop_pct` | number | No | Simulate the collateral falling by this percentage (0–100) |
+| `debt_change_pct` | number | No | Simulate the borrowed asset's price moving. Positive grows the debt and pushes HF down; omit for stablecoin debt |
+
+**Example output**
+
+```
+Health factor calculation
+
+  wBTC: $120,000 × 70% = $84,000
+  ETH: $30,000 × 80% = $24,000
+  ─ blended threshold: $108,000 ÷ $150,000 = 72.00%
+  risk-adjusted collateral: $108,000
+  debt: $60,000
+
+  health factor = $108,000 ÷ $60,000 = 1.80 [AT RISK]
+  collateral can fall 44.44% before liquidation
+  liquidation begins at $83,333.33 of collateral
+
+  Simulated (collateral -45%): 0.99 [LIQUIDATED]
+  ⚠ This position would be liquidatable.
+```
+
+With no debt, `healthFactor` is `null` rather than infinity — there is no liquidation point to report.
 
 ---
 
@@ -261,7 +301,7 @@ Pre-built prompt templates available as slash commands in supporting clients (Cl
 |------|------|-------------|
 | `check-evm-wallet` | `wallet` | Scan EVM wallet for lending risk across all protocols |
 | `stress-test-wallet` | `wallet`, `drop` | Simulate a collateral price crash |
-| `check-solana-wallet` | `wallet` | Scan Solana wallet on Kamino + Marginfi |
+| `check-solana-wallet` | `wallet` | Scan Solana wallet on Kamino |
 | `check-ton-wallet` | `wallet` | Scan TON wallet on EVAA |
 | `stablecoin-pegs` | `symbol` (optional) | Check stablecoin peg health |
 | `aave-utilization` | `asset`, `chain` (both optional) | Check Aave V3 market utilization |
@@ -277,8 +317,15 @@ Pre-built prompt templates available as slash commands in supporting clients (Cl
 - *"Which of these wallets is closest to liquidation: 0xaaa…, 0xbbb…?"*
 - *"Does 0x…1234 have any Moonwell borrows on Base?"*
 
+**Hypothetical positions** (no wallet needed)
+- *"If I supply 5 ETH at $2,000 with an 80% liquidation threshold and borrow $6,500 USDC, what's my health factor?"*
+- *"How far can ETH fall before that position gets liquidated?"*
+- *"How much can I borrow against 10 ETH at 82.5% and still keep a health factor of 2?"*
+- *"I have 2 wBTC at 70% and 10 ETH at 80% backing $60,000 of debt — what's my blended threshold?"*
+- *"What happens to my health factor if I borrowed ETH instead of USDC and ETH rallies 20%?"*
+
 **Solana wallets**
-- *"Check Kamino and Marginfi health for 7xKX…AbCD"*
+- *"Check Kamino health for 7xKX…AbCD"*
 - *"Is this Solana wallet at risk of liquidation on Kamino?"*
 
 **TON wallets**
