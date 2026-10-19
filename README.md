@@ -1,10 +1,10 @@
 # Alertio MCP Server
 
-[![smithery badge](https://smithery.ai/badge/alertio/alertio-mcp)](https://smithery.ai/servers/alertio/alertio-mcp)
-
 Real-time DeFi risk intelligence for AI agents. Scan lending positions across EVM, Solana, and TON chains, simulate liquidations, calculate health factors for hypothetical positions, monitor stablecoin pegs, inspect market utilization, and track perpetual funding rates — no API key required.
 
 ## Connection
+
+Listed in the [official MCP Registry](https://registry.modelcontextprotocol.io) as `io.alertio/alertio`.
 
 **Streamable HTTP (recommended)**
 
